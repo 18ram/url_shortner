@@ -1,17 +1,18 @@
+import os
 import mysql.connector
 import random, string
 from flask import Flask, render_template, request, redirect, url_for, flash
 
 # Flask app setup
 app = Flask(__name__)
-app.secret_key = "supersecretkey"  # needed for flash messages
+app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey")
 
-# MySQL connection
+# MySQL connection (read from environment variables for Render)
 db = mysql.connector.connect(
-    host="your-db-host.render.com",  # external DB host
-    user="your-db-user",
-    password="your-db-password",
-    database="url_shortener"
+    host=os.environ.get("DB_HOST", "localhost"),
+    user=os.environ.get("DB_USER", "root"),
+    password=os.environ.get("DB_PASSWORD", "root"),
+    database=os.environ.get("DB_NAME", "url_shortener")
 )
 cursor = db.cursor()
 
@@ -41,8 +42,10 @@ def index():
         )
         db.commit()
 
-        # Generate short URL
-        short_url = f"http://127.0.0.1:5000/{company_name}/{code}"
+        # Use deployment domain instead of 127.0.0.1
+        domain = request.host_url.strip("/")  # e.g. https://your-app.onrender.com
+        short_url = f"{domain}/{company_name}/{code}"
+
         flash("Short URL created successfully!", "success")
 
     return render_template("index.html", short_url=short_url)
@@ -57,5 +60,7 @@ def redirect_url(company, short_code):
     else:
         return "Invalid or expired short URL", 404
 
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Bind to 0.0.0.0 for Render
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
