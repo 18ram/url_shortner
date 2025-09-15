@@ -8,9 +8,9 @@ app.secret_key = "supersecretkey"  # needed for flash messages
 
 # MySQL connection
 db = mysql.connector.connect(
-    host="localhost",
-    user="root",        # change if different
-    password="root",    # change to your MySQL password
+    host="your-db-host.render.com",  # external DB host
+    user="your-db-user",
+    password="your-db-password",
     database="url_shortener"
 )
 cursor = db.cursor()
